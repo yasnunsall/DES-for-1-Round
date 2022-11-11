@@ -62,16 +62,22 @@ S_boxes = [
       [2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11]]
 ]
 
+
+
 input_ = "0111100101100001011100110110100101101110011101010110111001110011"
 key = "0011001000110001001110010011001100111000001101000011010100110011"
-# the first 8 letter of my name and my school number
+# input is the first 8 letter of my name and key is my school number
+# i converted them to bits and got the first 64 bits
+
 
 
 def key_generation(key):
+  #permutation choice 1
   key = [int(key[i-1]) for i in pc_1]
   C = [key[i] for i in range(int(len(key)/2))]
   D = [key[i] for i in range(int(len(key)/2), len(key))]
   
+  #left circular shift
   c0 = C[0]
   C_shift = [C[i+1] for i in range(len(C)-1)]
   C_shift.append(c0)
@@ -82,6 +88,7 @@ def key_generation(key):
 
   key = C_shift + D_shift
 
+  #permutation choice 2 
   K = [key[i-1] for i in pc_2]
 
   return K
@@ -89,15 +96,18 @@ def key_generation(key):
   
 
 def des_algorithm(input_, K):
+  # initial permutation
   input_ = [int(input_[i-1]) for i in IP]
   L0 = [input_[i] for i in range(int(len(input_)/2))]
   R0 = [input_[i] for i in range(int(len(input_)/2), len(input_))]
-
+      
+  # expansion permutation
   r0 = [R0[i-1] for i in expansion_permutation]
+  # xor 
   r0 = [(x+y)%2 for x,y in zip(r0, K)]
 
+  # I split r0 into 8 parts that are 6 bits long
   r0_ = []
-
   list = []
   for i in range(48):
     list.append(r0[i])
@@ -105,26 +115,30 @@ def des_algorithm(input_, K):
       r0_.append(list)
       list = []
 
+  # S-box    
   r0 = []
   for list, box in zip(r0_, S_boxes):
     row = 2*list[0] + 1*list[-1]
     column = 8*list[1] + 4*list[2] + 2*list[3] + 1*list[4]
     output = box[row][column]
-    for i in range(3, -1, -1):
+    for i in range(3, -1, -1): #2^3, 2^2, 2^1, 2^0
       r0.append(output//2**i)
       output %= 2**i
-    
+      
+  # permutation   
   r0 = [r0[i-1] for i in permutation_function]
 
+  # xor    
   R1 = [(x+y)%2 for x,y in zip(r0, L0)]
   L1 = R0
-    
+  
+  # final permutation    
   final = L1 + R1
   final = [final[i-1] for i in inverse_IP]
 
   return final
   
-  
+      
 generated_key = key_generation(key)
 cipher_text = des_algorithm(input_, generated_key)
 
